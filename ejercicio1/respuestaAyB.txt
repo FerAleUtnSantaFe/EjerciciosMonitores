@@ -1,0 +1,43 @@
+El ejercicio muestra un monitor `m` con una condición `permiso` y dos métodos:
+- `antesydespues()`: que realiza algo "antes", envía una señal y luego realiza algo "después"
+- `parte2()`: que espera una señal y luego ejecuta la parte "importante"
+
+## Parte a) Mostrar que el código del monitor no es correcto si la disciplina utilizada es "signal y espera urgente"
+
+En la disciplina "signal y espera urgente" (signal and urgent wait), cuando un thread ejecuta `signal()`, se despierta inmediatamente un thread que esté esperando, y el thread que hizo la señal se bloquea hasta que el thread despertado libere el monitor.
+
+Veamos una traza de ejecución para demostrar que no funciona correctamente:
+
+1. Thread A entra en `antesydespues()` y ejecuta la parte "antes"
+2. Thread A ejecuta `permiso.signal()`
+3. Si Thread B está esperando en `permiso.wait()`, se desbloquea y toma el control del monitor
+4. Thread B ejecuta la parte "importante"
+5. Thread B sale del método `parte2()` y libera el monitor
+6. Thread A reanuda la ejecución y ejecuta la parte "después"
+
+El problema es que este orden de ejecución sería:
+`antes → importante → después`
+
+Pero el orden deseado según el enunciado es:
+`antes → importante → después`
+
+A primera vista parece que funciona, pero hay un problema fundamental: si no hay ningún thread esperando cuando se ejecuta `signal()`, esa señal se pierde. Esto podría provocar que si Thread B llega a `wait()` después de que Thread A haya ejecutado `signal()`, Thread B quedaría bloqueado indefinidamente.
+
+## Parte b) ¿Qué sucede si se utiliza la disciplina "signal y continúa"?
+
+En la disciplina "signal y continúa" (signal and continue), cuando un thread ejecuta `signal()`, se programa para despertar a un thread en espera, pero el thread que hizo la señal continúa su ejecución inmediatamente sin ceder el monitor.
+
+Con esta disciplina:
+
+1. Thread A entra en `antesydespues()` y ejecuta la parte "antes"
+2. Thread A ejecuta `permiso.signal()` y programa despertar a Thread B
+3. Thread A continúa inmediatamente y ejecuta la parte "después"
+4. Thread A sale del método y libera el monitor
+5. Thread B, que estaba esperando, ahora obtiene el monitor y ejecuta la parte "importante"
+
+El orden de ejecución sería:
+`antes → después → importante`
+
+Este orden no coincide con el requerido (`antes → importante → después`), lo que demuestra que esta disciplina tampoco funciona correctamente para este problema.
+
+Para que el código funcione correctamente y garantice el orden `antes → importante → después`, necesitaríamos modificar la estructura del monitor, posiblemente usando dos variables de condición y un control más explícito sobre el orden de ejecución.
