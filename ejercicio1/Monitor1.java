@@ -6,49 +6,46 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Monitor1 {
     private final Lock lock = new ReentrantLock();
-    private final Condition conditionAntes = lock.newCondition();
-    private final Condition conditionImportante = lock.newCondition();
+    private final Condition antes = lock.newCondition();
+    private final Condition despues =  lock.newCondition();
+
     private boolean antesEjecutado = false;
     private boolean importanteEjecutado = false;
 
-    public void antesydespues() {
+    public void antesydespues(){
         lock.lock();
-        try {
-            // Parte antes
+        try{
             System.out.println("Antes");
             antesEjecutado = true;
 
-            // Señalar que la parte importante puede ejecutarse
-            conditionAntes.signal();
+            antes.signal();
 
-            // Esperar hasta que la parte importante se haya ejecutado
-            while (!importanteEjecutado) {
-                conditionImportante.await();
+            while(!importanteEjecutado){
+                despues.await();
             }
 
-            // Parte después
             System.out.println("Despues");
-        } catch (InterruptedException e) {
+
+        } catch(Exception e){
             e.printStackTrace();
-        } finally {
+        } finally{
             lock.unlock();
         }
     }
 
-    public void parte2() {
+    public void parte2(){
         lock.lock();
-        try {
-           while(!antesEjecutado){
-                conditionAntes.await();
-           }
+        try{
+            while(!antesEjecutado){
+                antes.await();
+            }
 
-           System.out.println("Importante");
-           importanteEjecutado = true;
-
-           conditionImportante.signal();
-        } catch (Exception e) {
-            e.getStackTrace();
-        } finally {
+            System.out.println("Importante");
+            importanteEjecutado = true;
+            despues.signal();
+        } catch(Exception e){
+            e.printStackTrace();
+        } finally{
             lock.unlock();
         }
     }
