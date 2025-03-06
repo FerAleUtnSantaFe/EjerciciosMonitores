@@ -4,7 +4,6 @@ public class Principal2 {
     
     public static void main(String[] args) {
         Monitor2 monitor = new Monitor2();
-        System.out.println("asdasd");
         // Crear threads para ejecutar las operaciones en diferentes órdenes
         Thread t1 = new Thread(() -> {
             try {
